@@ -1,0 +1,67 @@
+#!/usr/bin/perl
+
+#Written (with love) by Casey Cole
+
+#This wonderful piece of perliness will average multiple Redcraft files.
+#I have found use for it in the study of dynamics. Just give it the input 
+#files as an argument and it spits out a file called avgRDC.out. 
+
+@argc = @ARGV;
+$size = @argc;
+if ($size < 2) {
+	print "Averages RDC files (need at least 2).\nUsage: $0 <inputfiles> \n";
+	exit;
+}
+open (OUT, '>'."avgRDC.out");
+
+my $count = 0;
+
+for($i = 0; $i < $size; $i++)
+{
+	open (IN, $argc[$i]);
+	$count = 0;
+	while(<IN>)
+	{
+		$line = $_;
+		chomp($line);
+		@word = split(" ", $line);
+		$length = @word;
+		for($j = 0; $j < $length; $j++)
+		{
+			if($word[$j] == 0)
+			{
+				$temp[$count] = $word[$j];
+			}
+			else
+			{
+				$temp[$count] += $word[$j];
+			}
+			$count++;
+		}
+	}
+}
+$arrLen = @temp;
+$cnt = 0;
+
+for($m = 0; $m < $arrLen; $m++)
+{  
+	if($temp[$m] != 0) 
+	{
+		$newVal = $temp[$m] / $size;
+		print OUT $newVal;
+	}
+	else 
+	{
+		print OUT $temp[$m];
+	}
+	
+	if($cnt < 15) { $cnt++; }
+	else { $cnt = 1; }
+	
+	if(($cnt % 2) == 0 || $cnt == 1) { print OUT " "; }
+	else { print OUT "\n"; }
+}
+
+close(OUT); 
+close(IN);
+

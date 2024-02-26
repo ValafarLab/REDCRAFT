@@ -1,0 +1,66 @@
+#!/usr/bin/perl
+
+if ($#ARGV < 1) {
+	print "Usage: $0 <pdb to minimize> <margin in degrees>\n";
+	exit;
+}
+$pdb = $ARGV[0];
+$margin = $ARGV[1];
+$cminfile = $pdb.'.cmin';
+
+%config = readConfig('redcraft.conf');
+my $offset = $config{"Start_Residue"} - 1;
+
+@P = split /\./, $pdb;
+$P[$#P] = 'min'.$margin;
+$minpdb = join('.', @P);
+
+open (DIHED, "/opt/mmtsb/perl/dihed.pl -list phi,psi $pdb |");
+open (CMIN, ">$cminfile");
+
+print "$pdb: creating constrain file... ";
+while (<DIHED>) {
+	chomp;
+	@V = split(" ", $_);
+	print CMIN $_.' '.($V[1] - $margin).' '.($V[2] - $margin).' '.($V[1]+$margin).' '.($V[2]+$margin)."\n";
+}
+
+close(DIHED); 
+close(CMIN);
+
+print "Original $pdb fitness: ";
+$ang = `phipsi $pdb`;
+$script = 'molan -e -p'.$config{'Data_Path'}.' -d'.$config{'RDC_File_Prefix'}.' -m'.$config{'Media_Count'}.' -o'.$offset.' "'.$ang.'"';
+print "\n".$script."\n";
+$o_rmsd = `$script`;
+print $o_rmsd."\n";
+print "Minimizing... ";
+$script = 'cmin '.$config{'Data_Path'}.' '.$config{'RDC_File_Prefix'}.' '.$config{'Media_Count'}.' '.$offset.' '.$cminfile;
+$ang = `$script`;
+print "Creating $minpdb ... ";
+$script = 'molan -e -g -f'.$minpdb.' -p'.$config{'Data_Path'}.' -d'.$config{'RDC_File_Prefix'}.' -m'.$config{'Media_Count'}.' -o'.$offset.' "'.$ang.'"';
+print "\n".$script."\n";
+$fit = `$script`;
+print "Done\n$minpdb fitness: $fit\n";
+
+`rm $cminfile`;
+exit(0);
+
+sub readConfig {
+	my ($filename) = @_;
+	my $CONF;
+	open(CONFIG, "<$filename");
+	while (<CONFIG>) {
+		chomp;                  # no newline
+		s/#.*//;                # no comments
+		s/\[.*//;               # no categories
+		s/^\s+//;               # no leading white
+		s/\s+$//;               # no trailing white
+		next unless length;     # anything left?
+		my ($var, $value) = split(/\s*=\s*/, $_, 2);
+		$CONF{$var} = $value;
+	}
+	close(CONFIG);
+	$CONF{'Data_Path'} =~ s/\"//g;  # remove quotation marks from the path
+	return %CONF;
+}

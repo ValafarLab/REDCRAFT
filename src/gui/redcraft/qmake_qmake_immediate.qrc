@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/">
+<file alias="icons/rdc.svg">/Users/julianrachele/redcraft/src/gui/redcraft/icons/rdc.svg</file>
+</qresource>
+</RCC>

@@ -1,0 +1,89 @@
+#!/usr/bin/perl
+package List::Util;
+
+use List::Util qw(max min);
+
+$argSize = @ARGV;
+
+if($argSize < 2) {
+	print "Usage: $0 <RDC Prefix> <Output Prefix> <media count> # this script can modify the original files\n";
+	exit;
+
+}
+
+$prefix = $ARGV[0];
+$outfix = $ARGV[1];
+$media = $ARGV[2];
+
+# Get NH range from M1
+
+open(FIRST, $prefix.'.1');
+my($maxnh, $minnh, $NHREF);
+while (<FIRST>) { # skip the res name
+	<FIRST>; # N-C
+	my $temp = <FIRST>; # N-H
+	@_ = split(" ", $temp);
+	if ($_[0] != 999) {
+		if ($_[0] < $minnh) { $minnh = $_[0]; }
+		if ($_[0] > $maxnh) { $maxnh = $_[0]; }
+	}
+	<FIRST>; # H-C
+	<FIRST>; # Ca-Ha
+	<FIRST>; # Ha-H
+	<FIRST>; # ha-H
+}
+close(FIRST);
+print "$maxnh $minnh\n"; 
+$nh1_range = $maxnh - $minnh;
+
+@vectors = ("C - N", "N - H", "H - C", "Ca - Ha", "Ha - H", "ha - H");
+
+for ($m = 1; $m <= $media; $m++) {
+	my (@rdcs);
+	open (RDC, $prefix.'.'.$m);
+	while (<RDC>) { #residue name
+		for ($r = 0; $r < 6; $r++) {
+			@v = split(" ", <RDC>);
+			next if ($v[0] eq "999");
+			if ($rdcs[$r][0] > $v[0]) { $rdcs[$r][0] = $v[0]; }
+			if ($rdcs[$r][1] < $v[0]) { $rdcs[$r][1] = $v[0]; }
+		}
+	}
+
+
+	seek(RDC, 0, 0); # going to re-read the file
+
+	my $buff = "";
+
+	print "$prefix.$m new weights:\n";
+	for ($r = 0; $r < 6; $r++) {
+		if ($rdcs[$r][1] == $rdcs[$r][0]) { $w = 1; }
+		else {
+			$w = int($nh1_range / ($rdcs[$r][1] - $rdcs[$r][0]) * 100 + 0.5) / 100;
+		}
+		print $vectors[$r].' :'.$w."	range($rdcs[$r][1] : $rdcs[$r][0])\n";
+	}
+
+	while (<RDC>) {
+		$buff .= $_;
+		for ($r = 0; $r < 6; $r++) {
+			my @token = split(" ", <RDC>);
+			if ($rdcs[$r][1] == $rdcs[$r][0]) { $w = 1; }
+			else {
+				$w = int($nh1_range / ($rdcs[$r][1] - $rdcs[$r][0]) * 100 + 0.5) / 100;
+			}
+			$buff .= shift(@token).' '.$w.' ';
+			shift(@token); # pop off original weight
+			$buff .= join(" ", @token)."\n"; # append whatever comments they had before
+
+
+		}
+	}
+	close(RDC);
+
+	open (RDC, '>'.$outfix.'.'.$m); # reopen for editing;
+	print RDC $buff;
+	close (RDC);
+
+	#print "$m N-C min max: ".$rdcs[0][0]." ".$rdcs[0][1]."\n";
+}

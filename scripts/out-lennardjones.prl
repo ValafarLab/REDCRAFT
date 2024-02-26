@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+# script not finished
+# goal to print out backbone RMSD for top N structures in a given .out file
+
+if ($#ARGV < 0) {
+	print "Usage: $0 <file.out>\n";
+	exit(0);
+}
+
+$file = $ARGV[0];
+
+open(OUT, $file);
+
+while (<OUT>) {
+	chomp;
+	@angles = split(" ", $_);
+	$score = pop(@angles);
+	$ang = join(" ",@angles);
+
+	$output = `molan -l "$ang"`;
+	chomp $output;
+	$lj = (split(" ", $output))[-1];
+	print $lj."\n";
+}
+

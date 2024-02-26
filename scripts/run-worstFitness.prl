@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+# script not finished
+# goal to print out backbone RMSD for top N structures in a given .out file
+
+if ($#ARGV < 1) {
+	print "Usage: $0 <from> <to> [depth]\n";
+	exit(0);
+}
+
+$from = int($ARGV[0]);
+$to = int($ARGV[1]);
+$depth = int($ARGV[2]);
+
+for $i ($from .. $to) {
+	if ($depth == 0) {
+		@angles = split(" ", `tail -1 $i.out`);
+	} else {
+		@angles = split(" ", `head -$depth $i.out | tail -1`);
+	}
+	$score = pop(@angles);
+	chomp $score;
+	print "$i $score\n";
+}
+

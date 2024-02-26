@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+#Written by Casey Cole
+#So! You have RDC data in a niccceee spread sheet huh? Well this script 
+#will allow you to turn that data into a handy little redcraft file! AWHH..
+#Expects a file like the one made in it's sister script (REDCRAFT-excel.prl)
+#which is a space delimited file. I will make this one more versitile 
+#if it proves to be popular. 
+
+$argc = @ARGV;
+if ($argc < 2) {
+	print "Converts txt file from excel to REDCRAFT file.\nUsage: $0 <input> <output> \n";
+	exit;
+}
+
+open (IN, $ARGV[0]);
+open (OUT, '>'.$ARGV[1]);
+
+
+while (<IN>) 
+{
+	$line = $_;
+	chomp($line);
+	@la = split(" ", $line);
+
+	print OUT "$la[0]"." "."$la[1]"." "."$la[2]"."\n";
+    print OUT "$la[3]"." "."$la[4]\n";
+	print OUT "$la[5]"." "."$la[6]\n";
+	print OUT "$la[7]"." "."$la[8]\n";
+	print OUT "$la[9]"." "."$la[10]\n";
+	print OUT "$la[11]"." "."$la[12]\n";
+	print OUT "$la[13]"." "."$la[14]\n";
+
+
+   
+}
+
+close(IN);
+close(OUT); 

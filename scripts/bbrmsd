@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+
+$pdb1 = $ARGV[0];
+$pdb2 = $ARGV[1];
+
+$name1 = (split("/", $pdb1))[-1];
+@yname1 = split("\\.", $name1);
+pop(@yname1);
+$name1 = join(".", @yname1);
+
+$name2 = (split("/", $pdb2))[-1];
+@yname2 = split("\\.", $name2);
+pop(@yname2);
+$name2 = join(".", @yname2);
+
+if (`which pymol` eq "" ) {
+	print "$0 cannot run. `pymol` not found.\n";
+	exit;
+}
+$script = "pymol $pdb1 $pdb2 -c -d \"align $name1, $name2, 0; quit\" 2>/dev/null | grep \"RMS = \" | awk '{printf \$4}'";
+$bbrmsd = `$script`;
+print $bbrmsd;

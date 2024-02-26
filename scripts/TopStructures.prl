@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+
+if ($#ARGV < 1) {
+	print "Usage: $0 <output.pdb> <input.out> <# structures> [skip rate]\n";
+	exit;
+}
+
+# input: .out file
+
+$output = $ARGV[0];
+$file = $ARGV[1];
+$sc = $ARGV[2];
+$skip = ($ARGV[3]) ? $ARGV[3] : 1;
+
+open(Fstruc,'<'.$file);
+`rm -f $output`;
+for $q (1 .. $sc) {
+	print "$q\r";
+	if ($q % $skip != 0) { next; }
+	$line = <Fstruc>;
+	chomp($line);
+	@line = split(' ', $line);
+	pop(@line);
+	$line = join(' ', @line);
+	#`generate_structure temp.pdb $line`;
+	`molan -g -ftemp "$line"`;
+	`echo "MODEL $q" >> $output`;
+	`cat temp.pdb >> $output`;
+	`echo "ENDMDL" >> $output`;
+}
+print "\n";
+close(Fstruc);
+`rm temp.pdb`;

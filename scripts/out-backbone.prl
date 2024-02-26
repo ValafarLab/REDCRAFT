@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+# script not finished
+# goal to print out backbone RMSD for top N structures in a given .out file
+
+if ($#ARGV < 1) {
+	print "Usage: $0 <file.out> <reference.pdb>\n";
+	exit(0);
+}
+
+$file = $ARGV[0];
+$ref = $ARGV[1];
+
+$resnum = int($file);
+
+open(OUT, $file);
+
+while (<OUT>) {
+	chomp;
+	@angles = split(" ", $_);
+	$score = pop(@angles);
+	$ang = join(" ",@angles);
+
+	$rescnt = (scalar @angles) / 2;
+	$offset = $resnum - $rescnt;
+
+	$temp = "temp";
+	`molan -g -f$temp -p. -dwRDC -o $offset "$ang" `; #NOTE: 180 180 added at the end to obtain the N-CA of the "future" residue
+	$bbrmsd = `bbrmsd $temp.pdb $ref`;
+	print $bbrmsd."\n";
+}
+

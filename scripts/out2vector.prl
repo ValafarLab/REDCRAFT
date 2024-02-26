@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+
+$file = $ARGV[0];
+if (!(-f $file)) {
+	print "File `$file' not found.\n";
+	exit;
+}
+
+$residue = int($file) + 1; #NOTE: +1 for the "future" residue
+
+#FIXME: read config file and use the RDC file for residue names
+
+open(OUT, $file);
+
+while (<OUT>) {
+	chomp;
+	@angles = split(" ", $_);
+	pop(@angles);
+	$ang = join(" ",@angles);
+
+	$temp = "temp$$";
+	`molan -g -f$temp "$ang 180 180"`; #NOTE: 180 180 added at the end to obtain the N-CA of the "future" residue
+
+	#the following line expects MOLAN pdb files -- using awk with columns, not with character offset
+	$A1 = `awk '{if (\$1 == "ATOM" && \$5 == $residue && \$3=="N") print \$6,\$7,\$8}' $temp.pdb`;
+	$A2 = `awk '{if (\$1 == "ATOM" && \$5 == $residue && \$3=="CA") print \$6,\$7,\$8}' $temp.pdb`;
+
+	chomp $A1;
+	chomp $A2;
+
+	print "$A1 $A2\n";
+}
+
+`rm $temp.pdb`;

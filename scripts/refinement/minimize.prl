@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+
+$TOPRESULTS = 1;
+$SCRIPT = 'redcraft lm-min redcraft.conf'; # path prefix media offset
+$FREQ = 3;   # How often to minimize. 1 would be every residue.
+
+# YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
+
+$resNum = $ARGV[$#ARGV];
+
+#print "COMMENT $SCRIPT\n";
+
+sub readConfig {
+	my ($filename) = @_;
+	my $CONF;
+	open(CONFIG, "<$filename");
+	while (<CONFIG>) {
+		chomp;                  # no newline
+		s/#.*//;                # no comments
+		s/\[.*//;               # no categories
+		s/^\s+//;               # no leading white
+		s/\s+$//;               # no trailing white
+		next unless length;     # anything left?
+		my ($var, $value) = split(/\s*=\s*/, $_, 2);
+		$CONF{$var} = $value;
+	}
+	close(CONFIG);
+	$CONF{'Data_Path'} =~ s/\"//g;  # remove quotation marks from the path
+	return $CONF;
+}
+
+if ($#ARGV < 0) {
+	print STDERR "Usage: $0 <residue number>\n";
+	exit(1);
+}
+
+exit if (($resNum % $FREQ) != 0);
+
+  if (`which $SCRIPT` eq "") {
+  	print STDERR "$0: Cannot find unconstrained minimization '$SCRIPT'\n";
+  	exit;
+  }
+
+# offset is 0 because the RDC files are truncated
+
+  if (!-f $resNum.'.out') {
+  	print STDERR "$0: Cannot locate $resNum.out\n";
+  	exit;
+  }
+  @top = `head -$TOPRESULTS $resNum.out`;
+  for $q (@top) {
+  	@a = split(' ', $q);
+  	pop(@a); # remove the RDC fitness score
+  	$ang = join(' ', @a);
+  	$mina = `$SCRIPT $ang`; # calls minimization script
+				# expects output of: "phi psi phi psi... score"
+  	print "ADD $mina";
+  	next;
+  }

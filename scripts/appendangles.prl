@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+$REMOVE_LAST_COLUMN = 1;
+
+# Usage: $0 <.out file> <angles to append>
+
+$append = join(' ',@ARGV);
+while (<STDIN>) {
+	chomp;
+	@_ = split(' ',$_);
+	pop(@_) if ($REMOVE_LAST_COLUMN);
+	$angles = join(' ',@_).' '.$append;
+	print $angles.' ';
+	print `evaluate . RDC 5 $angles | awk '{print \$NF}'`;
+}

@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+$argc = @ARGV;
+if ($argc < 5) {
+	print "BBRMSD as a sliding window\nUsage: $0 <pdb> <pdb> <start> <end> <window size>\n";
+	exit;
+}
+die("Incomplete\n");
+
+$pdb1 = $ARGV[0];
+$pdb2 = $ARGV[1];
+$start = $ARGV[2];
+$end = $ARGV[3];
+$window = $ARGV[4];
+
+$loops = $end - $start + 1 - $window + 1;
+if ($loops <= 0) {
+	print "Incorrect window size. $loops comparisons.\n";
+	exit;
+}
+
+for ($i = $start; $i < $start + $loops; $i++) {
+	$from = $i;
+	$to = $i + $window - 1;
+	print "i: $i - ".($i + $window - 1)."\n";
+}

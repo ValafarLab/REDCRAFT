@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+
+# Changes Redcat to redcraft without the list of phi (all j-couplings are 999)
+# Original by Elizabeth Timko, modified by Casey Cole
+# So, the mods... 1.) Instead of a list of Phis you simply give it a list of AA
+#						-as a result: all j-couplings will be 999
+#                 2.) Instead of giving you a generic file named 'RDC.1' you 
+#				      you give it as a 3rd argument your very own name :) yay. 
+#				  3.) There is no 3... maybe someday... 
+#There is an example of the list of Amino acids in the Developers subdir
+
+$txtfile = $ARGV[0];
+$redcatfile = $ARGV[1];
+$outfile = $ARGV[2];
+
+$numlinestxt = 0;
+$numlinesredcat = 0;
+$argSize = @ARGV;
+
+if($argSize < 3)
+{
+    print "Usage: $0 <list of Amino Acids> <REDCAT file> <outfile>\n";
+    exit();
+}
+
+open (REDCAT, "$redcatfile") or die "Could not open file $redcatfile\n";
+$numlinesredcat++ while <REDCAT>;
+close(REDCAT);
+
+open (TXT, "$txtfile") or die "Could not open file $txtfile\n";
+$numlinestxt++ while <TXT>;
+close(TXT);
+
+if(($numlinestxt * 6) != $numlinesredcat)
+{
+	die "The number of amino acids do not match up.";
+}
+
+open (TXT, "<$txtfile") or die "Could not open file $txtfile\n";
+open (REDCAT, "<$redcatfile") or die "Could not open file $redcatfile\n";
+open (OUTPUT, ">$outfile") or die "Could not open file $outfile\n";
+
+while(($l1 = <TXT>))
+{
+	chomp($l1);
+	$name = $l1;
+    $jcoupling = 999;
+	print OUTPUT "$name $jcoupling $name\n";
+    
+	for($i = 0; $i < 6; $i++)
+	{
+		if(($l2 = <REDCAT>))
+		{
+			chomp($l2);
+            @listline2 = split (" ", $l2);
+            print OUTPUT "$listline2[6] $listline2[8]\n";
+		}
+	}
+}
+close(TXT);
+close(REDCAT);
+close(OUTPUT);

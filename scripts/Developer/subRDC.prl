@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+
+#Written by Casey Cole who is currently very perplexed by Depeche Mode...
+#This script takes in a base name of your outfiles followed by one or multiple
+#redcat files with no RDCs. This script will calculate those RDCs based on 
+#2 alignment medias of my choosing. I like 'em. Feel free to change them :'(
+#The 2 order tensors I have chosen :    
+#                                       Sxx   Syy	Szz  alpha beta gamma
+#									1.  3e-4  5e-4 -8e-4   0    0     0
+#									2. -4e-4 -6e-4 10e-4  40   50   -60
+
+use Cwd;
+
+$argSize = @ARGV;
+
+if($argSize < 1)
+{
+		print "Usage: $0 <base name> <redcat file(s)>\n";
+		exit();
+}
+
+$base = $ARGV[0];
+
+for($i = 1; $i < $argSize; $i++) 
+{
+	$redcat  = $ARGV[$i];
+	$basename = "$base"."$i";
+	system("/usr/bin/Redcat -i $redcat -c 3e-4 5e-4 -8e-4 0 0 0 y y -o $basename.1.redcat");
+	system("/usr/bin/Redcat -i $redcat -c -4e-4 -6e-4 10e-4 40 50 -60 y y -o $basename.2.redcat");
+}

@@ -1,0 +1,25 @@
+#!/usr/bin/perl 
+
+$numarg = $#ARGV;
+
+if($numarg != 0) {
+  print "Usage: $0 <format>\n";
+  print "fromat = 0, no \\n.\n";
+  print "fromat = 1, put \\n.\n";
+  exit(0);
+}
+
+while(<stdin>) {
+   $CN = <stdin>;
+   if($ARGV[0] == 1) { chomp($CN); print "$CN ";} else { print "$CN"; }
+   $NH = <stdin>;
+   if($ARGV[0] == 1) { chomp($NH); print "$NH ";} else { print "$NH"; }
+   $CH = <stdin>;
+   if($ARGV[0] == 1) { chomp($CH); print "$CH ";} else { print "$CH"; }
+   $CAHA = <stdin>;
+   if($ARGV[0] == 1) { chomp($CAHA); print "$CAHA ";} else { print "$CAHA"; }
+   $HAH = <stdin>;
+   if($ARGV[0] == 1) { chomp($HAH); print "$HAH ";} else { print "$HAH"; }
+   $HaH = <stdin>;
+   print "$HaH";
+}

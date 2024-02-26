@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+$TOPRESULTS = 10;
+$GRID = 1;
+$SCRIPT = 'cmin . RDC 2 '; # path prefix media file
+
+# YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
+
+if ($#ARGV < 0) {
+	print STDERR "Usage: $0 <residue number>\n";
+	exit(1);
+}
+$resNum = $ARGV[$#ARGV]; 
+
+if (`which cmin` eq "") {
+	print STDERR "$0: Cannot find unconstrained minimization 'umin'\n";
+	exit(1);
+}
+
+# read top results
+@top = `head -$TOPRESULTS $resNum.out`;
+for $q (@top) {
+	# create config file
+	# cmin reads residue names from the RDC file, so here we'll just use UNK
+	@a = split(' ', $q);
+	pop(@a); # remove the RDC fitness score
+
+	open(RCMIN, ">$$.rcmin"); # create temporary minimization file
+	for ($i = 0; $i < $#a; $i+=2) {
+		print RCMIN "UNK\t".$a[$i]."\t".$a[$i+1]."\t$GRID\t$GRID\n";
+	}
+	# call the minimization
+	$output = `$SCRIPT $$.rcmin 2>/dev/null`;
+	chomp($output);
+	print "ADD $output 0.000\n"; # we print out a 0 because cmin does not spit out the RDC score by default
+	close(RCMIN);
+	unlink("$$.rcmin");
+}

@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+
+if (!$ARGV[0]) {
+	print "Prints location in previous .out files\n";
+	print "Usage: $0 <.out file> [offset=0]\n";
+	exit;
+}
+
+@top = split(" ",`head -1 $ARGV[0]`);
+
+$file = 2;
+if ($ARGV[1]) { $file = $ARGV[1]+2 }
+$search = $top[0]." ".$top[1]." ".$top[2]." ".$top[3];
+for ($q = 3; $q < $#top; $q+=2) {
+	$tempSearch = $search;
+	$tempSearch =~ s/-/\\-/g;
+	@v = split(':',`grep -nm1 "$tempSearch" $file.out`);
+	#print 'grep -nm1 "'.$tempSearch.'" '.$file.'.out'."\n";
+	@out = split(' ', $v[1]);
+	print $v[0]."\t".$out[$#out]."\n";
+	$file++;
+	$search .= " ".$top[$q + 1]." ".$top[$q + 2];
+}
+

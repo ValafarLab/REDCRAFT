@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+
+#Written by Casey Cole.
+#Converts a Redcraft file to an excel friendly version. Space delimited.
+#Give it a redcraft file and what ever you want your space delimited file 
+#to be. *Worth noting, at this point it can only handle a one word comment
+#in the redcraft file. For example your first line in a block of RDC data
+#(in your redcraft file) should look like:  ALA 999 ALA <-- this can only be one word. 
+#I will fix... someday... 
+
+$argc = @ARGV;
+if ($argc < 2) {
+	print "Converts 7-row RDC input to a excel friendly version.\nUsage: $0 <input> <output> \n";
+	exit;
+}
+
+open (IN, $ARGV[0]);
+open (OUT, '>'.$ARGV[1]);
+
+$count = 1;
+
+while (<IN>) 
+{
+	$line = $_;
+	chomp($line);
+	if($count < 7) 
+	{ 
+		print OUT "$line"." ";
+		$count++;
+	}
+	elsif($count == 7)
+	{
+		print OUT "$line"."\n";
+		$count = 1;
+	}
+
+   
+}
+
+close(IN);
+close(OUT);
+
+

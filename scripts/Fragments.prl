@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+
+# expects prefix
+$prefix = $ARGV[0];
+if (!$prefix) {
+	print "Usage: $0 <RDC file prefix>\n";
+	exit;
+}
+
+$m = 1;
+@phidens;
+@psidens;
+while (-f $prefix.'.'.$m) {
+	open(R, $prefix.'.'.$m);
+	$res = 0;
+	while(<R>) {
+		$res++;
+		
+		$temp = <R>; chomp($temp); @temp = split(' ', $temp); # C-N
+		$phidens[$res-1]++ if ($temp[0] != 999);
+		$psidens[$res-1]++ if ($temp[0] != 999);
+		
+		$temp = <R>; chomp($temp); @temp = split(' ', $temp); # N-H
+		$phidens[$res-1]++ if ($temp[0] != 999);
+		$psidens[$res-1]++ if ($temp[0] != 999);
+		
+		$temp = <R>; chomp($temp); @temp = split(' ', $temp); # C-H
+		$phidens[$res-1]++ if ($temp[0] != 999);
+		$psidens[$res-1]++ if ($temp[0] != 999);
+		
+		$temp = <R>; chomp($temp); @temp = split(' ', $temp); # Ca-Ha
+		$phidens[$res]++ if ($temp[0] != 999);
+		
+		$temp = <R>; chomp($temp); @temp = split(' ', $temp); # Ha-H
+		$phidens[$res]++ if ($temp[0] != 999);
+		
+		$temp = <R>; chomp($temp); @temp = split(' ', $temp); # ha-H
+		$phidens[$res-1]++ if ($temp[0] != 999);
+		$psidens[$res-1]++ if ($temp[0] != 999);
+	}
+	$m++;
+	if ($ARGV[1] && $m > $ARGV[1]) { last; }
+}
+$max = 0;
+for $q (1 .. $res) {
+	if (!$phidens[$q]) { $phidens[$q] = 0 };
+	if (!$psidens[$q]) { $psidens[$q] = 0 };
+
+	if ($phidens[$q] > $max) { $max = $phidens[$q]; }
+	if ($psidens[$q] > $max) { $max = $psidens[$q]; }
+}
+
+print "Res\tPhi\tPsi\n";
+#use IO::Interactive qw(is_interactive);
+if (-t STDOUT) {
+	use Term::ANSIColor qw(:constants);
+	for $q (1 .. $res) {
+		print "$q\t";
+		if ($phidens[$q] < $max / 3) { print RED; }
+		elsif ($phidens[$q] < $max / 2) { print YELLOW; }
+		print $phidens[$q].RESET;
+		print "\t";
+		if ($psidens[$q] < $max / 3) { print RED; }
+		elsif ($psidens[$q] < $max / 2) { print YELLOW; }
+		print $psidens[$q].RESET;
+		print "\n";
+	}
+} else {
+	for $q (1 .. $res) {
+		print "$q\t";
+		print $phidens[$q];
+		print "\t";
+		print $psidens[$q];
+		print "\n";
+	}
+	
+}

@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+#Originally written by Lord Voldemort || somebody, edited by Casey 'BAMF' Cole
+
+#Now instead of just the res#, score (RDC-RMSD) and bbrmsd it now includes
+#the change in score from res to res (called $der) and the word count ($wc)
+#of the '.out' files created to check if decimation is truly working or...
+#if the files are growing out of control in which case you might be hogging
+#the whole server and will get beraded by an angry frenchman... 
+use Cwd;
+
+$argSize = @ARGV;
+
+if($argSize < 3)
+{
+		print "Usage: $0 <start_residue> <stop_residue> <reference.pdb>\n";
+		exit();
+}
+
+$startRes = $ARGV[0];
+$endRes = $ARGV[1];
+$pdbname = $ARGV[2];
+
+$prevScore = 0;
+
+$|++;
+
+if (`which bbrmsd` eq "")
+{
+	print "Script `bbrmsd' was not found in PATH.\nPlease add REDCRAFT's scripts directory to the PATH.\n";
+	exit;
+}
+
+for($currentPdb = $startRes; $currentPdb <= $endRes; $currentPdb++)
+{
+	while (!(-f $currentPdb.'.pdb'))
+    {
+		sleep(1);
+	}
+	$bbrmsd = `bbrmsd $pdbname $currentPdb.pdb`;
+	$RMSD = `head -1 $currentPdb.out | awk '{printf \$NF}'`;
+    $der = $RMSD - $prevScore;
+    $wordcount = `wc -l $currentPdb.out | cut -d " " -f1`;
+    printf '%3d %.6f %.3f %.6f %5d', $currentPdb, $RMSD, $bbrmsd, $der, $wordcount;
+    print "\n";
+    #print "$currentPdb $RMSD $bbrmsd $der $wordcount";
+    $prevScore = $RMSD;
+}

@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+use Switch;
+$numarg = $#ARGV;
+
+if ($numarg == 0 && $ARGV[0] eq "\-\-help") {
+	print "This file allows you to fake the input angles for REDCRAFT.
+if you already have a .out file with correct angles.
+For example: if you have a file 17.out then running
+$0 17.out
+will create files 1 through 17 and each file will contain only 2 angles from top line of 17.out\n";
+	exit;
+}
+
+if ($numarg < 0) {
+	print "Usage: $0 <input.out file> [residue limit] \nor\n$0 --help\n";
+	exit(0);
+}
+
+$F = $ARGV[0];
+($res,$ext) = split(/\./,$F);
+
+if ($ARGV[1]) {
+	$res = $ARGV[1] * 1;
+}
+
+if (!($ext eq "out")) {
+	print "Expecting a .out file!\n";
+	exit;
+}
+print "Creating files 1 through $res...";
+open(RDCFILE, "<".$ARGV[0]);
+$l = <RDCFILE>;
+if ($l eq '') { print("Error: empty line\n"); exit; }
+
+@l = split(' ', $l);
+
+for $q (1..$res) {
+	open (A, ">".$q);
+	print A $l[2*$q - 2].' '.$l[2*$q - 1];
+	close A;
+}
+print "Done\n";

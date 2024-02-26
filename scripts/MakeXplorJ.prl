@@ -1,0 +1,59 @@
+#!/usr/bin/perl 
+
+
+sub PrintXplor {
+	($fout, $J, $er, $res) = @_;
+	$p_res = $res - 1;
+
+	print $fout "! $res\n";
+	print $fout "assign ( resid  $p_res and name C) (resid $res and name N)\n";
+	print $fout "       ( resid  $res and name CA) (resid $res and name C) ";
+	print $fout "$J $er\n";
+}
+
+$numarg = $#ARGV;
+
+if($numarg != 4) {
+  print "Usage: $0 <Start> <End> <output file> <Master file> <Error>\n";
+  exit(0);
+}
+
+$start = $ARGV[0];
+$end = $ARGV[1];
+$er = $ARGV[4];
+
+open(foutDih, ">$ARGV[2].J.tbl"), or die "Error openning Dih\n";
+open(finMas, "<$ARGV[3]"), or die "Error openning $ARGV[3]\n";
+
+if(($end-$start) < 1) {
+	print "Need to have at least two peptide planes.\n";
+	exit(0);
+}
+
+for($i = 1; $i < $start; $i++) {
+   $AAtype = <finMas>;
+   $CN = <finMas>;
+   $NH = <finMas>;
+   $CH = <finMas>;
+   $CAHA = <finMas>;
+   $HAH = <finMas>;
+   $HaH = <finMas>;
+}
+
+for($i = $start ; $i < $end; $i++) {
+   $AAtype = <finMas>;
+   $CN = <finMas>;
+   $NH = <finMas>;
+   $CH = <finMas>;
+   $CAHA = <finMas>;
+   $HAH = <finMas>;
+   $HaH = <finMas>;
+
+   chomp($AAtype); @list = split(" ", $AAtype);
+   if(($list[1] != 999) && ($list[0] ne "GLY")) { 
+      PrintXplor(foutDih, $list[1], $er, $i);
+   }
+
+}
+close(foutDih);
+close(finMas);

@@ -1,0 +1,87 @@
+#!/usr/bin/perl
+
+$argSize = @ARGV;
+
+if($argSize < 3)
+{
+	print "Usage: $0 <BMRB File> <PDB FILE> <OUTPUTFILE> [PDB Model #]\n";
+	exit();
+}
+
+$bmrbFile = $ARGV[0];
+$pdbFile = $ARGV[1];
+$outputFile = $ARGV[2];
+if ($argSize == 4) {
+	$model = $ARGV[3];
+} else {
+	$model = 1;
+}
+
+
+
+
+open(BMRB,"./$bmrbFile");
+open(OUT,">./$outputFile");
+
+$DVal{"HN"} = 0;
+
+$GR{"H"}  = 42.576e6;
+$GR{"HA"} = 42.576e6;
+$GR{"C"}  = 10.705e6;
+$GR{"CA"} = 10.705e6;
+$GR{"N"}  = -4.3156e6;
+
+# FORMAT:
+#
+#   59    SER      H     59    SER      N      2.230     1.000 1.00   1
+
+while(<BMRB>)
+{
+
+	chomp; # to remove erraneous whitespace
+	s/#.*//;                # no comments
+	s/^\s+//;               # no leading white
+	s/\s+$//;               # no trailing white
+	$line = $_;
+	@token = split(" ",$line);
+	#print $#token." ".$line."\n";
+	next unless $#token == 9;     # anything left?
+
+	$R1 = $token[0];
+	$A1 = $token[2];
+	$R2 = $token[3];
+	$A2 = $token[5];
+	$RDC = $token[6];
+	#print $A1.' and '.$A2."\n";
+	#print $GR{$A1}.' and '.$GR{$A2}."\n";
+#	print $Dmax; exit;
+	$DID = $A2.$A1;
+	if ($A1 lt $A2) {
+		$DID = $A1.$A2;
+	}
+
+	$Dmax = $DVal{$DID};
+	if (!$Dmax) {
+		$Dmax = -1 * 1.25663706e-6 * $GR{$A1} * $GR{$A2} * 6.626068e-34 / (2 * 3.14159265) / 1e-10 / 1e-10 / 1e-10;
+		$DVal{$DID} = $Dmax;
+	}
+
+	#print 'egrep "^ATOM.+ '.$A1.' .+ '.$R1.' " '.$pdbFile.' | head -'.$model.' | tail -1';
+	$fxyz = `egrep "^ATOM.+ $A1 .+ $R1 " $pdbFile | head -$model | tail -1`;
+	@rc1 = split(" ", $fxyz);
+	$sxyz = `egrep "^ATOM.+ $A2 .+ $R2 " $pdbFile | head -$model | tail -1`;
+	@rc2 = split(" ", $sxyz);
+	if (!$fxyz || !$sxyz) {
+		$rc1[5] = 999;
+		$rc1[6] = 999;
+		$rc1[7] = 999;
+		$rc2[5] = 999;
+		$rc2[6] = 999;
+		$rc2[7] = 999;
+	}
+	print OUT $rc1[5].' '.$rc1[6].' '.$rc1[7].' ';
+	print OUT $rc2[5].' '.$rc2[6].' '.$rc2[7].' ';
+	print OUT $RDC." $Dmax 1 /* $R1 $A1-$A2 */\n";
+}		
+close(BMRB);
+close(OUT);

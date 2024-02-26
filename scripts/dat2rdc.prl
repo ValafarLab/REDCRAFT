@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+
+#
+# Each .dat file should have first column as residue number, and second column with RDC
+# fres - second column should be the residue name
+#
+
+$fres = 'sur18c.dat';
+$fcn = '';
+$fnh = 'nh.dat';
+$fch = '';
+$fcaha = '';
+$fhah = '';
+$fhah2 = '';
+
+$from = 6;
+$to = 92;
+
+for ($i = $from; $i <= $to; $i++) {
+	$res = `grep "^$i " $fres | awk '{printf \$2}'`;
+	if ($res) { print $res; } else { print "ALA"; }
+	print " 999 $i\n";
+
+	if ($fcn) {
+		$cn = `grep "^$i " $fcn | awk '{printf \$2}'`;
+		if ($cn) { print $cn; } else { print 999; }
+		print " 1\n";
+	} else { print "999 1\n"; }
+	if ($fnh) {
+		$nh = `grep "^$i " $fnh | awk '{printf \$2}'`;
+		if ($nh) { print $nh; } else { print 999; }
+		print " 1\n";
+	} else { print "999 1\n"; }
+	if ($fch) {
+		$ch = `grep "^$i " $fch | awk '{printf \$2}'`;
+		if ($ch) { print $ch; } else { print 999; }
+		print " 1\n";
+	} else { print "999 1\n"; }
+	if ($fcaha) {
+		$caha = `grep "^$i " $fcaha | awk '{printf \$2}'`;
+		if ($caha) { print $caha; } else { print 999; }
+		print " 1\n";
+	} else { print "999 1\n"; }
+	if ($fhah) {
+		$hah = `grep "^$i " $fhah | awk '{printf \$2}'`;
+		if ($hah) { print $hah; } else { print 999; }
+		print " 1\n";
+	} else { print "999 1\n"; }
+	if ($fhah2) {
+		$hah2 = `grep "^$i " $fhah2 | awk '{printf \$2}'`;
+		if ($hah2) { print $hah2; } else { print 999; }
+		print " 1\n";
+	} else { print "999 1\n"; }
+}

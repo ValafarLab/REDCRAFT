@@ -1,0 +1,52 @@
+#!/usr/bin/perl
+use Switch;
+$numarg = $#ARGV;
+
+if ($numarg == 0 && $ARGV[0] eq "\-\-help") {
+	print "This script allows you to remove J coupling data and particular RDC entries from your RDC file.
+	The file expects that your input file has 6 RDC entries per residue in the following format
+	ATM j.c.value COMMENT
+	#########
+	#########
+	#########
+	#########
+	#########
+	#########
+	
+	If you would like to remove the J coupling and the last 3 RDC values for file RDC.1 run:
+	$0 RDC.1 1 0 0 0 1 1 1\n";
+	exit;
+}
+
+if ($numarg < 8) {
+	print "Usage: $0 <inputfile>  <output> J 1 2 3 4 5 6 [AtomFilter]\nor\n$0 --help\n";
+	exit(0);
+}
+
+open(RDCFILE, "<".$ARGV[0]);
+open(CUTFILE, ">".$ARGV[1]);
+
+$lc = 0;
+$res = '';
+while (<RDCFILE>) {
+	chomp;
+	$line = $_;
+	$blockline = $lc % 7;
+	if ($blockline == 0) { ($res) = split(/\s/,$line); }
+	next if ($ARGV[$blockline + 2] == 0);
+	next if ($ARGV[9] && $ARGV[9] ne $res);
+
+
+	switch ($blockline) {
+		case 0 {
+			($aa, $j, $com) = split(' ', $line);
+			$j = 999;
+			$line = join(' ', $aa, $j, $com);
+		}
+		case [1..6] { $line = "999 1"; }
+	}
+} continue {
+	print CUTFILE $line."\n";
+	$lc++;
+}
+print "Writing output to $ARGV[1]\n";

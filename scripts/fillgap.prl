@@ -1,0 +1,152 @@
+#!/usr/bin/perl
+
+if ($#ARGV < 1) {
+	print "Usage: $0 <domain1.out> <domain2.out> [loops=3000]\n";
+	exit(1);
+}
+
+$MINTYPE = 'cmin'; #TODO: later change it to be an input parameter maybe?
+
+$CONF = readConfig('redcraft.conf');
+#$SCRIPT .= ' '.$CONF{'Data_Path'}.' '.$CONF{'RDC_File_Prefix'}.' '.$CONF{'Media_Count'}.' '.($offset);
+
+sub readConfig {
+	my ($filename) = @_;
+	my $CONF;
+	open(CONFIG, "<$filename");
+	while (<CONFIG>) {
+		chomp;                  # no newline
+		s/#.*//;                # no comments
+		s/\[.*//;               # no categories
+		s/^\s+//;               # no leading white
+		s/\s+$//;               # no trailing white
+		next unless length;     # anything left?
+		my ($var, $value) = split(/\s*=\s*/, $_, 2);
+		$CONF{$var} = $value;
+	}
+	close(CONFIG);
+	$CONF{'Data_Path'} =~ s/\"//g;  # remove quotation marks from the path
+	return $CONF;
+}
+
+$last1 = int($ARGV[0]);
+$last2 = int($ARGV[1]);
+$LOOPS = 3000;
+$LOOPS = $ARGV[2] if ($ARGV[2]);
+
+open (D1, $ARGV[0]);
+$l = <D1>;
+close(D1);
+@L = split(" ", $l);
+$offset1 = $last1 - ((@L) - 1) / 2; # minus the score divide by (phi psi) pair
+pop(@L);
+$domain1 = join(" ", @L);
+
+open (D2, $ARGV[1]);
+$l = <D2>;
+close(D2);
+@L = split(" ", $l);
+$offset2 = $last2 - ((@L) - 1) / 2; # minus the score divide by (phi psi) pair
+pop(@L);
+$domain2 = join(" ", @L);
+
+$gap = $offset2 - $last1;
+
+print "Domain 1: ".($offset1+1)." to $last1\nDomain 2: ".($offset2+1)." to $last2\n";
+print "Gap size: $gap\n";
+
+if ($gap < 1) {
+	print "No gap.\n";
+	exit;
+}
+if ($gap > 4)  {
+	print "Gap is too big.\n";
+	exit;
+}
+
+my @gapang;
+
+
+for $a ($last1+1 .. $offset2) {
+	open (ANG, $a.".angles");
+	my @angles = <ANG>;
+	#print "$a.angles size: ".$#angles."\n";
+	push @gapang, [ @angles ];
+	close(ANG);
+}
+
+#print "gapang size: $#gapang\n";
+
+my $solution;
+my $bestScore = "None";
+
+for $loop (1 .. $LOOPS) {
+	#print "loop $loop\n\t";
+	my $angles =  "$domain1 ";
+	for $R (@gapang) {
+		my @A = @{$R};
+		my $rand = rand @A;
+		my $pair = $A[$rand];
+		my @P = split(" ",$pair);
+		$pair = @P[0]." ".@P[1];
+		chomp $pair;
+		$angles .= "$pair ";
+	}
+	$angles .= "$domain2";
+	my $vdw = `molan -l "$angles" | awk '{printf \$3}'`;
+	next if ($vdw > 50);
+	
+	if ($MINTYPE eq "umin") {
+		my $angles = `umin $CONF{'Data_Path'} $CONF{'RDC_File_Prefix'} $CONF{'Media_Count'} $offset1 $angles`;
+	}
+	if ($MINTYPE eq "exmin") { 
+		my $angles = `exmin $CONF{'Data_Path'} $CONF{'RDC_File_Prefix'} $CONF{'Media_Count'} $offset1 $angles`;
+	}
+
+	if ($MINTYPE eq "cmin") {
+		@A = split(" ", $angles);
+		$gstart = ($last1 - $offset1) * 2;
+		$gend= ($offset2 - $offset1) * 2;
+
+		open (CMIN, ">$$.cmin"); 
+
+		for (my $i = 0; $i < $#A; $i++) {
+			$phi = $A[$i];
+			$psi = $A[++$i];
+			if ($i < $gstart || $i > $gend) {
+				print CMIN "UNK $phi $psi $phi $psi $phi $psi\n";
+			} else {
+				print CMIN "UNK $phi $psi -360 -360 360 360\n";
+			}
+		}
+		close("$$.cmin");
+
+#print "cmin $CONF{'Data_Path'} $CONF{'RDC_File_Prefix'} $CONF{'Media_Count'} $offset1 $$.cmin";
+		my $angles = `cmin $CONF{'Data_Path'} $CONF{'RDC_File_Prefix'} $CONF{'Media_Count'} $offset1 $$.cmin`;
+	}
+	chomp $angles;
+	my $script = "molan -e -p".$CONF{'Data_Path'}." -d".$CONF{'RDC_File_Prefix'}." -m".$CONF{'Media_Count'}." -o$offset1 \"$angles\"";
+	my $score = `$script | awk '{printf \$NF}'`;
+	#print $score."\n";
+	if ($score < $bestScore || $bestScore eq "None") {
+		$bestScore = $score;
+		$solution = $angles;
+	}
+} continue {
+	my $p = int(100 * $loop / $LOOPS);
+	print "$bestScore $p%\r";
+}
+unlink $$.'.cmin';
+print "Best score: $bestScore\n";
+print "Angles:\n$solution\n";
+
+
+
+#print "start\n\n";
+#for $q (@gapangi) {
+#	#print "\t [ @$q ]..........,\n";
+#}
+#
+#
+#@A = @{$gapangi[0]};
+#print $A[1];

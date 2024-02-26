@@ -1,0 +1,148 @@
+#!/usr/bin/perl
+
+$FREQ = 1;   # How often to run. 1 would be every residue.
+#@SCHEDULE = qw/17 22 23 29/;
+#$THRESHOLD = 1.4; # above this RMSD will not be returned
+
+$KEEPTOPPERCENT = 0.8;
+
+# two column RCSA files: res rcsa
+$TAG = "rcsa"; # Will look for N.$TAG.1 C.$TAG.1 .2 etc..
+
+$CONF = readConfig('redcraft.conf');
+$offset = ($CONF{'Start_Residue'} - 1);
+
+
+# YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE
+sub readConfig {
+	my ($filename) = @_;
+	my $CONF;
+	open(CONFIG, "<$filename");
+	while (<CONFIG>) {
+		chomp;                  # no newline
+		s/#.*//;                # no comments
+		s/\[.*//;               # no categories
+		s/^\s+//;               # no leading white
+		s/\s+$//;               # no trailing white
+		next unless length;     # anything left?
+		my ($var, $value) = split(/\s*=\s*/, $_, 2);
+		$CONF{$var} = $value;
+	}
+	close(CONFIG);
+	$CONF{'Data_Path'} =~ s/\"//g;  # remove quotation marks from the path
+	return $CONF;
+}
+
+if ($#ARGV < 0) {
+	print STDERR "Usage: $0 <NMR Frequency in MHz> <residue number>\n";
+	print STDERR "	Computes RCSA RMSD fitness for each structure and deletes those above the specified threshold\n";
+	exit(1);
+}
+
+$ARGC = @ARGV;
+if ($ARGC != 2) {
+	print "COMMENT Usage: $0 <NMR Frequency in MHz> <res num>\n";
+	exit;
+}
+$NMR = $ARGV[0];
+$resNum = $ARGV[$#ARGV];
+
+exit if (($resNum % $FREQ) != 0);
+#exit unless (grep $_ eq $resNum, @SCHEDULE);
+#exit if ($resNum - $offset < 5); # UNDERDETERMINED ORDER TENSOR (just nh)
+
+#populate NS, HS, and CS with experimental data from all alignment media
+for ($m = 0; $m < $CONF{'Media_Count'}; $m++) {
+	$o = open(CSA, "<N.$TAG.".($m+1));
+	if ($o) {
+		@E = <CSA>;
+		close(CSA);
+		for $q (@E) {
+			@l = split(" ",$q);
+			$NS[$m][$l[0]] = $l[1];
+		}
+	}
+	$o = open(CSA, "<H.$TAG.".($m+1));
+	if ($o) {
+		@E = <CSA>;
+		close(CSA);
+		for $q (@E) {
+			@l = split(" ",$q);
+			$HS[$m][$l[0]] = $l[1];
+		}
+	}
+	$o = open(CSA, "<C.$TAG.".($m+1));
+	if ($o) {
+		@E = <CSA>;
+		close(CSA);
+		for $q (@E) {
+			@l = split(" ",$q);
+			$CS[$m][$l[0]] = $l[1];
+		}
+	}
+}
+
+
+open(OUT, $resNum.'.out');
+@top = <OUT>;
+close(OUT);
+$printedTruncate = 0;
+%Structures = {};
+$maxRCSARMSD = 0;
+$multiplier = $NMR * 1e6;
+
+for $q (@top) {
+	@ang = split(" ", $q);
+	$rdc_score = pop(@ang);
+	$ang = join(' ', @ang);
+	my $sum = 0;
+	my $count = 0;
+	@backcalc = `molan -c -p$CONF{'Data_Path'} -d$CONF{'RDC_File_Prefix'} -m$CONF{'Media_Count'} -o$offset "$ang"`;
+	for $bc (@backcalc) {
+		@L = split(" ", $bc); # M0 24 N H C:	4.373e-08	-2.901e-09	-4.642e-08
+		$m = substr $L[0], 1, 1;
+		if ($NS[$m][$L[1]]) {
+			$sum += ($NS[$m][$L[1]] - ($L[5] * $multiplier))**2;
+			$count++;
+		}
+		if ($HS[$m][$L[1]]) {
+			$sum += ($HS[$m][$L[1]] - ($L[6] * $multiplier))**2;
+			$count++;
+		}
+		if ($CS[$m][$L[1]]) {
+			$sum += ($CS[$m][$L[1]] - ($L[7] * $multiplier))**2;
+			$count++;
+		}
+	}
+	$rmsd = sqrt($sum / $count);
+	push (@{$Structures{$rmsd}}, "ADD $ang $rdc_score\n");
+	$maxRCSARMSD = $rmsd if ($rmsd > $maxRCSARMSD);
+<<COMMENT;
+	if ($rmsd <= $THRESHOLD) {
+		if ($printedTruncate == 0)  {
+			print "TRUNCATE\n";
+			$printedTruncate = 1;
+		}
+		print "ADD $ang $rdc_score\n"; # note here we're printing the original RDC score
+		#print "COMMENT $rmsd\n";
+	}
+COMMENT
+}
+
+#$threshold = $maxRCSARMSD * 0.5;
+
+$MR = $KEEPTOPPERCENT * ($#top + 1); #Max Return
+
+$count = 0;
+foreach my $key (sort {$a <=> $b} keys %Structures) {
+	for my $value (@{$Structures{$key}}) {
+		$count++;
+		#last if ($key > $threshold);
+		last if ($count > $MR);
+		if ($printedTruncate == 0)  {
+			print "TRUNCATE\n";
+			$printedTruncate = 1;
+		}
+		print $value;
+	}
+}

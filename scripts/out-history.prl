@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+if (!$ARGV[0]) {
+	print "Prints location in previous .out files for set of angles\n";
+	print "Usage: $0 <starting.out file> <phi psi phi psi...>\n";
+	exit;
+}
+
+$out = shift(@ARGV);
+@top = @ARGV;
+$angc = scalar(@top) / 2;
+$resc = int($out);
+
+$file = $resc - $angc + 2;
+
+$search = $top[0]." ".$top[1]." ".$top[2]." ".$top[3];
+for ($q = 3; $q <= $#top; $q+=2) {
+	$tempSearch = $search;
+	$tempSearch =~ s/-/\\-/g;
+	@v = split(':',`grep -nm1 "$tempSearch" $file.out`);
+	#print 'grep -nm1 "'.$tempSearch.'" '.$file.'.out'."\n";
+	print $v[0]."\n";
+	$file++;
+	$search .= " ".$top[$q + 1]." ".$top[$q + 2];
+}
+

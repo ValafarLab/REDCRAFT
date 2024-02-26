@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+if (scalar @ARGV < 3) {
+	print "Creates top N PDB files with specified prefix from a given .out file\n";
+	print "Expects a file RDC.1 to be located in this directory. To change - modify source code.";
+	print "Usage: $0 <.out file> <count> <output prefix>\n";
+	exit;
+}
+
+$out = $ARGV[0];
+$count = $ARGV[1];
+$prefix = $ARGV[2];
+
+open (OUT, "<$out");
+$loop = 0;
+while (<OUT>) {
+	if ($loop > $count) { last; }
+	$loop++;
+	chomp;
+	split;
+	$score = pop(@_);
+	$_ = join(' ', @_);
+
+	if ($loop < 1000) { $l = '0'.$loop; }
+	else { $l = $loop; }
+	print `molan -g -f$prefix$l -p. -dRDC "$_"`;
+	print '.';
+}

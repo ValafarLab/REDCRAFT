@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+$RADIUS = 50;
+
+$ARGC = @ARGV;
+if ($ARGC < 3) {
+	print "Usage: $0: <.angles file> <phi> <psi> [radius]\n";
+	exit;
+}
+
+open (ANG, $ARGV[0]);
+@ANG = <ANG>;
+close(ANG);
+
+if ($ARGC == 4) { $RADIUS = $ARGV[3]; }
+
+for $a (@ANG) {
+	chomp $a;
+	my ($phi, $psi, $score) = split(" ", $a);
+	
+	$phidiff = abs($phi - $ARGV[1]);
+	while ($phidiff > 180) {$phidiff = abs($phidiff - 360);}
+
+	$psidiff = abs($psi - $ARGV[2]);
+	while ($psidiff > 180) {$psidiff = abs($psidiff - 360);}
+
+	next if ($phidiff > $RADIUS);
+	next if ($psidiff > $RADIUS);
+	
+	print "$phi $psi $score\n";
+}
+

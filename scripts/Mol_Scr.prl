@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+$numarg = $#ARGV + 1;
+
+if(($numarg == 0) || (($numarg % 2) == 1)) {
+  print "Usage: $0 <List Phi Psi>\n";
+  exit(0);
+}
+$num_pp = $numarg / 2 + 2;
+
+print "NewMol 'test'\n";
+for($i = 1; $i <= $num_pp; $i++) {
+   print "AddRes last 'ALA'\n";
+}
+print "SelectAngle 'name = \"PHI\" and res.num = 1'\n";
+print "SetAngle -180\n";
+print "SelectAngle 'name = \"PSI\" and res.num = 1'\n";
+print "SetAngle -180\n";
+for($res = 2; $res < $num_pp; $res++) {
+   print "SelectAngle 'name = \"PHI\" and res.num = $res'\n";
+   $phi = $ARGV[2*$res-4];
+   print "SetAngle $phi\n";
+   print "SelectAngle 'name = \"PSI\" and res.num = $res'\n";
+   $psi = $ARGV[2*$res-3];
+   print "SetAngle $psi\n";
+}
+
+print "SelectAngle 'name = \"PHI\" and res.num = $num_pp'\n";
+print "SetAngle -180\n";
+print "SelectAngle 'name = \"PSI\" and res.num = $num_pp'\n";
+print "SetAngle -180\n";
+

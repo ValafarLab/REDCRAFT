@@ -1,0 +1,66 @@
+#!/usr/bin/perl
+############################################################################
+ #   Copyright (C) 2008 by Elizabeth Timko                                 #
+ #   egtimko@gmail.com                                                     #
+ #                                                                         #
+ #   This program takes a file with the following form:                    #
+ #   residue_name phi psi deltaphi deltapsi                                #
+ #   The program creates REDCRAFT compatible list files 1 - last residue   #
+ #   containing all phi and psi combinations +- deltaphi and deltapsi.     #
+ #                                                                         #
+ #   This program is free software; you can redistribute it and/or modify  #
+ #   it under the terms of the GNU General Public License as published by  #
+ #   the Free Software Foundation; either version 2 of the License, or     #
+ #   (at your option) any later version.                                   #
+ #                                                                         #
+ #   This program is distributed in the hope that it will be useful,       #
+ #   but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+ #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+ #   GNU General Public License for more details.                          #
+ #                                                                         #
+ #   You should have received a copy of the GNU General Public License     #
+ #   along with this program; if not, write to the                         #
+ #   Free Software Foundation, Inc.,                                       #
+ #   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
+ ###########################################################################
+
+$numarg = $#ARGV;
+
+if ( $numarg != 2 ) 
+{
+	die "Usage: datafile stepPhi stepPsi\n";
+}
+$datafile = $ARGV[0];
+$stepPhi = $ARGV[1];
+$stepPsi = $ARGV[2];
+$i = 1;
+
+open(DATA, "$datafile") or die "Could not open file $datafile\n";
+
+while(($l1 = <DATA>))
+{
+	chomp($l1);
+	@listline1 = split (" ", $l1);
+
+	$phi = $listline1[0];
+	$psi = $listline1[1];
+	$deltaphi = $listline1[2];
+	$deltapsi = $listline1[3];
+
+        $phiStart = $phi - $deltaphi;
+        $phiStop = $phi + $deltaphi;
+        $psiStart = $psi - $deltapsi;
+        $psiStop = $psi + $deltapsi;
+   
+	open (LIST, ">$i") or die "Could not open file $i\n";
+	for($phi = $phiStart; $phi <= $phiStop; $phi += $stepPhi)
+	{	
+		for($psi = $psiStart; $psi <= $psiStop; $psi += $stepPsi)
+		{
+			print LIST "$phi $psi\n";
+		}
+	}
+	$i++;
+	close(LIST);
+}
+close(DATA);

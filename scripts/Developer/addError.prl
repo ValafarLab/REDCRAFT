@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+
+#Written by Casey Cole.
+#Feed me a redcraft file, the amount of error you would like to be added,
+#and the name of the outfile and *bAm* your wish is my command...
+
+@argc = @ARGV;
+$size = @argc;
+if ($size < 3) {
+	print "Adds 1Hz error to a redcraft file.\nUsage: $0 <redcraft file> <amount of error> <outfile name>\n";
+	exit;
+}
+$infile = @argc[0];
+$userError = @argc[1];
+$outfile = @argc[2];
+open (IN, $infile);
+open (OUT, $outfile);
+
+$y = ($userError *2); 
+$justDandy = $userError;
+
+while(<IN>)
+{
+	$error = int(rand($y))-$justDandy;
+	$line = $_;
+	chomp($line);
+
+	@word = split(" ", $line);
+	$length = @word;
+	for($i = 0; $i < $length; $i++)
+	{
+		if($word[$i] == 999 || $word[$i] == 0 || $word[$i] == 1) 
+		{ 	 
+			print OUT $word[$i]." ";
+		}
+		else
+		{
+			$word[$i] += $error;
+			print OUT $word[$i]." ";
+		}
+		
+	}
+	print OUT "\n";
+
+}
+
+close(IN); 
+close(OUT);

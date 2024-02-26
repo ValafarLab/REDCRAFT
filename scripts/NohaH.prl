@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+
+while (<stdin>)
+  {
+    print "$_";
+
+    $in = <stdin>;
+    print $in;
+
+    $in = <stdin>;
+    print $in;
+
+    $in = <stdin>;
+    print $in;
+
+    $in = <stdin>;
+    print $in;
+
+    $in = <stdin>;
+    print $in;
+
+    $in = <stdin>;
+    print "999 1\n";
+  }

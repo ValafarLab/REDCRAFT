@@ -1,0 +1,16 @@
+.git
+.idea
+.vscode
+bin
+build
+dist
+examples
+.gitignore
+CPack*
+.CMake*
+examples.zip
+install*
+PreLoad.cmake
+README.rst
+REDCRAFT*
+Redcraft.cbp

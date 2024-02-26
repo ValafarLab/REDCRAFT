@@ -1,0 +1,41 @@
+== Defining Refinement Scripts ==
+
+REDCRAFT allows for a periodic execution of a custom algorithm after one more residue has been added and minimized. This is done by making calls to shell executables from the [Refinement] section in the configuration file redcraft.conf.
+After REDCRAFTs algorithm finishes minimization, REDCRAFT looks for "script1" definition in [Refinement] and if such is defined, it calls the value by a shell command appending the current residue number as the last argument to the call. After it parses the output of the script (see below) it looks for a script2, then script3, and so on, until it fails to find a defenition of the script in sequence.
+
+== Developing Refinement Scripts ==
+
+The algorithm is completely up to the user, so is the implementation. Be it a Perl script, a c++ program, or a complex peice of software that makes network calls, and database interactions, REDCRAFT is ready to receive communication from the executable, and parse the output. Below is an example of communication between REDCRAFT and the executable
+
+Let's say your first refinement is a program called "monteCarloSample.exe" then your configuration file would include
+
+[Refinement]
+script1=monteCarloSample.exe
+[/Refinement]
+
+When REDCRAFT is done with, let's say, 14th residue it will produce the standard 14.out, 14.pdb, 14.redcat.m#, and then call the following shell command as if you type it in your shell terminal:
+
+%monteCarloSample.exe 14
+%
+%After the call is made, REDCRAFT reads the STDOUT written by your program looking for EOF, or keywords ADD, TRUNCATE, LIST, or DELETE.
+
+*** Note: at the moment this is not the case. REDCRAFT calls
+
+monteCarloSample.exe 14 > redcraft_refinement_script.out
+
+and then read the file one token at a time.
+
+
+The output of your program is expected to be 
+ADD phi1 psi1 phi2 psi2 phi3 ... phiN psiN score
+ADD ...
+.
+.
+.
+<EOF is sent when your script terminates>
+
+
+Where N is the residue count, provided by the last argument to your program (added by REDCRAFT; 14 in the example), and score is the RDC fitness (may be 0)
+
+REDCRAFT will create the provided phi-psi space structure, reading the torsion angles as floats, and add them to its internal memory list.
+REDCRAFT will *NOT* modify the existing .out and .pdb files to account for the change. It is up to the algorithm of your script to apply, or not apply these file changes.

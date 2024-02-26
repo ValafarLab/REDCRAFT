@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+
+#Written by Casey Cole who is very hungry at the current moment
+#Allow you to compare the order tensors as you are chugging along. 
+#Most apt application is in the study of dynamics when you want to know 
+#where the onset of dynamics is. I should just tell you how to use it... 
+#Feed it the redcat files (you will have several depending on how many 
+#mediums you used. For example to compare order tensors from alignment 1
+#--> perl compOrder.prl *.redcat.m1 
+
+use Cwd;
+
+$argSize = @ARGV;
+
+if($argSize < 1)
+{
+		print "Usage: $0 <redcat file(s)>\n";
+		exit();
+}
+
+@arr = [];
+
+for($i = 0; $i < $argSize; $i++) 
+{
+	$redcat  = $ARGV[$i];
+	$arr[$i] = $redcat; 
+}
+
+@sortedarr = sort {$a <=> $b} @arr;
+$length = @sortedarr;
+
+for($j = 0; $j < $length; $j++) 
+{
+	$num = substr $sortedarr[$j], -13;
+	print "$num : ";
+	system("/usr/bin/Redcat -i $sortedarr[$j] -b | grep \"OTM\"");
+}
+

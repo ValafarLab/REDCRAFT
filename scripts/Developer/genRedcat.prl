@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+#Written by Casey Cole whilst listening to Dire Straights... not bad..
+#This script will generate a redcat file for you from a pdb or multiple
+#pdbs. Brillant! Why so? Because it makes it alot easier when you are wanting 
+#to look at state changes and dynamics. For example the last argument you 
+#can simply feed in *.pdb from the directory that you are in and voila! 
+#You gots a bunch of redcaty files! Cool. 
+#Example schema should be in the Developers subdir.
+
+use Cwd;
+
+$argSize = @ARGV;
+
+if($argSize < 4)
+{
+		print "Usage: $0 <start residue> <stop residue> <schema> <base name> <pdb(s)>\n";
+		exit();
+}
+
+$startRes = $ARGV[0];
+$endRes = $ARGV[1];
+$schema = $ARGV[2];
+$base = $ARGV[3];
+
+for($i = 4; $i < $argSize; $i++) 
+{
+	$pdb  = $ARGV[$i];
+	$newi = ($i - 3);
+	$basename = "$base"."$newi";
+	system("/usr/bin/Redcat -p $pdb $startRes $endRes $schema -o $basename.redcat");
+}

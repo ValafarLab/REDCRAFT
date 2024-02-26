@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+############################################################################
+ #   Copyright (C) 2008 by Elizabeth Timko                                 #
+ #   egtimko@gmail.com                                                     #
+ #                                                                         #
+ #   This program takes the following two parameters:                      #
+ #   start_residue end_residue                                             #
+ #   (start_residue must be 2 or greater)                                  #
+ #                                                                         #
+ #   The program creates a file named RMSD.txt stating all of the REDCRAFT #
+ #   RMSDs from all of the .out files from start_residue to end_residue.   #
+ #                                                                         #
+ #   This program is free software; you can redistribute it and/or modify  #
+ #   it under the terms of the GNU General Public License as published by  #
+ #   the Free Software Foundation; either version 2 of the License, or     #
+ #   (at your option) any later version.                                   #
+ #                                                                         #
+ #   This program is distributed in the hope that it will be useful,       #
+ #   but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+ #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+ #   GNU General Public License for more details.                          #
+ #                                                                         #
+ #   You should have received a copy of the GNU General Public License     #
+ #   along with this program; if not, write to the                         #
+ #   Free Software Foundation, Inc.,                                       #
+ #   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
+ ###########################################################################
+
+$numarg = $#ARGV;
+
+if ( $numarg != 1 ) 
+{
+	die "Usage: start_residue end_residue\n";
+}
+
+$start = $ARGV[0];
+$stop = $ARGV[1];
+
+open(RMSD, ">RMSD.txt") or die "Could not open file RMSD.txt\n";
+
+for($i = $start; $i <= $stop; $i++)
+{	
+	open(OUT, "$i.out") or die "Could not open file $i.out\n";
+	$l1 = <OUT>;
+	chomp($l1);
+	@listline1 = split (" ", $l1);
+	$rmsd = $listline1[$#listline1];
+	print RMSD "$i $rmsd\n";
+	close(OUT);
+}
+close(RMSD);

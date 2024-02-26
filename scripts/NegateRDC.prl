@@ -1,0 +1,56 @@
+#!/usr/bin/perl 
+
+$numarg = $#ARGV;
+
+if($numarg != 5) {
+  print "Usage: $0 <CN> <NH> <CH> <CAHA> <HAH> <HaH>\n";
+  exit(0);
+}
+
+$tCN = $ARGV[0];
+$tNH = $ARGV[1];
+$tCH = $ARGV[2];
+$tCAHA = $ARGV[3];
+$tHAH = $ARGV[4];
+$tHaH = $ARGV[5];
+
+
+while(<stdin>) {
+  print;
+
+  $CN = <stdin>; chomp($CN); @listline = split(" ", $CN);
+  if(($tCN == 1) && ($listline[0] != 999) ) {
+    $listline[0] = -1 * $listline[0];
+  }
+  print "$listline[0] $listline[1]\n";
+     
+  $NH = <stdin>; chomp($NH); @listline = split(" ", $NH);
+  if(($tNH == 1) && ($listline[0] != 999)) {
+    $listline[0] = -1 * $listline[0];
+  }
+  print "$listline[0] $listline[1]\n";
+
+  $CH = <stdin>; chomp($CH); @listline = split(" ", $CH);
+  if(($tCH == 1) && ($listline[0] != 999)) {
+    $listline[0] = -1 * $listline[0];
+  }
+  print "$listline[0] $listline[1]\n";
+
+  $CAHA = <stdin>; chomp($CAHA); @listline = split(" ", $CAHA);
+  if(($tCAHA == 1) && ($listline[0] != 999)) {
+    $listline[0] = -1 * $listline[0];
+  }
+  print "$listline[0] $listline[1]\n";
+
+  $HAH = <stdin>; chomp($HAH); @listline = split(" ", $HAH);
+  if(($tHAH == 1) && ($listline[0] != 999)) {
+    $listline[0] = -1 * $listline[0];
+  }
+  print "$listline[0] $listline[1]\n";
+
+  $HaH = <stdin>; chomp($HaH); @listline = split(" ", $HaH);
+  if(($tHaH == 1) && ($listline[0] != 999)) {
+    $listline[0] = -1 * $listline[0];
+  }
+  print "$listline[0] $listline[1]\n";
+}

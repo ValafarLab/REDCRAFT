@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+$SKIPFIRST = 1;
+$SKIPLAST = 1;
+$grid = 10;	# nearest neighbor can be solution + grid
+$padding = 60;	# maximum angle away from solution
+
+$af = 1;
+for ($q = 0; $q <= $#ARGV; $q += 2) {
+	if (-f $af.'.angles') {`rm $af.angles`;}
+	print "$af.angles\r";
+
+	for ($phi = $ARGV[$q] - $padding; $phi <= $ARGV[$q] + $padding; $phi+=$grid) {
+		next if ($SKIPFIRST && $phi != $ARGV[$q]);
+
+		for ($psi = $ARGV[$q+1] - $padding; $psi <= $ARGV[$q+1] + $padding; $psi+=$grid) {
+			next if ($SKIPLAST && $psi != $ARGV[$q+1] && ($q+2) > $#ARGV);
+			$f = $phi; $s = $psi;
+			$f += 360 if ($f < -180);
+			$f -= 360 if ($f > +180);
+			$s += 360 if ($s < -180);
+			$s -= 360 if ($s > +180);
+			`echo "$f $s" >> $af.angles`;
+		}
+		if ($SKIPFIRST && $phi == $ARGV[$q]) {
+			$SKIPFIRST = 0;
+			last;
+		}
+	}
+	$af++;
+}
+print "Done            \n";

@@ -1,0 +1,47 @@
+#!/usr/bin/perl
+
+$argSize = @ARGV;
+
+if($argSize < 3)
+{
+		print "Usage: $0 <start_residue> <stop_residue> <reference.pdb> [offset]\n";
+		exit();
+}
+
+$startRes = $ARGV[0];
+$endRes = $ARGV[1];
+$pdbname = $ARGV[2];
+$offset = $ARGV[3] ? $ARGV[3] : 0;
+$shift = 0;
+
+if ($offset < 0) { $shift = -$offset; $offset = 0; if ($ARGV[4]) {$offset = $ARGV[4];}}
+else { $shift = $ARGV[4]; }
+
+@tld = ('|','\\', '-','/');
+$tldc = 0;
+$|++;
+for($currentPdb = $startRes; $currentPdb <= $endRes; $currentPdb++) {
+	while (!(-f $currentPdb.'.pdb')) {
+		#print "\r$tld[$tldc] ... waiting ";
+		#$tldc = ($tldc + 1) %4;
+		sleep(1);
+		#print "\r              \r";
+	}
+	open(outputFile, ">bbrmsdtest.mac");
+	#create the current macro
+	print outputFile "InitAll yes \n";
+	print outputFile "ReadPdb $pdbname\n";
+	print outputFile "ReadPdb $currentPdb.pdb \n";
+	print outputFile "SelectAtom 'bb & (#1-1:".($offset + 1 + $shift)."-".($currentPdb+$offset)." #2-2:".(1 + $shift)."-".($currentPdb).")'\n";
+	print outputFile "Fit to_first 'selected'\n";
+	print outputFile "Quit\n";
+	close outputFile;
+	#print "Calculating Residual: $currentPdb\n";
+	#print bbrmsd "$currentPdb ";
+	$bbrmsd = `molmol -tf bbrmsdtest.mac 2>&1| grep RMSD | awk -F: \'{print \$3}\'`;
+	$RMSD = `head -1 $currentPdb.out | awk '{printf \$NF}'`;
+	chomp($bbrmsd);
+
+	print "$currentPdb $RMSD $bbrmsd\n";
+}
+`rm bbrmsdtest.mac`; #cleanup

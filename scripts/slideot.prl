@@ -1,0 +1,55 @@
+#!/usr/bin/perl
+
+# path prefix m-count offset redcatfile window
+$path = $ARGV[0];
+$prefix = $ARGV[1];
+$media = $ARGV[2];
+$offset = $ARGV[3];
+$redcat = $ARGV[4];
+$window = $ARGV[5];
+
+# Redcat Command Line
+$RCL = 'rcl';
+
+die ("Redcat command line not found.\n") if (`which $RCL` eq "");
+#die ("phipsi extraction of pdb not found.\n") if (`which phipsi` eq "");
+
+$lines = `wc -l $redcat | awk '{printf \$1}'`;
+$slides = $lines - $window + 1;
+
+$OT = 0;
+$OT2 = 0;
+for ($s = 0; $s < $slides; $s++) {
+	#create temporary redcat file
+	$top = $s + $window;
+	`head -$top $redcat | tail -$window > temp.redcat.slideot`;
+	$OT = $OT2;
+	$OT2 = `rcl -i temp.redcat.slideot -b | grep compose -A3 | tail -3`;
+
+	if ($OT and $OT2) {
+		my $fit = otmdist($OT, $OT2);
+		$fit *= 24350;
+		$fit = int($fit * 100) / 100;
+		print "$s $fit\n";
+	} else {
+		print "Skipping $s\n";
+	}
+}
+
+sub otmdist {
+	my ($S1, $S2) = @_;
+	
+	@S1 = split(" ", $S1);
+	@S2 = split(" ", $S2);
+
+	@D;
+
+	for ($i = 0; $i < 6; $i++) {
+		$D[$i] = $S1[$i] - $S2[$i];
+	}
+
+	my $dist = sqrt(($D[0]**2 + $D[4]**2 + $D[0]*$D[4] + $D[1]**2 + $D[2]**2 + $D[5]**2) * 4 / 15);
+
+	return $dist;
+}
+

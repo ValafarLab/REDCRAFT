@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+
+$NUMBER_OF_PAIRS = 100;
+$DEFAULT_FILE = '/Apps/redcraft/scripts/Ram.level1';
+#$DEFAULT_FILE = '/Apps/redcraft/scripts/All.space';
+$STRICT_FILTER = 0; # do not use any angles outside of $DEFAULT_FILE 
+
+# read 4 lines
+# figure out residue number and phi/psi
+# store in array phi,psi,dphi,dpsi
+
+
+#assign ( resid    3 and name C    ) ( resid    4 and name N    )
+#       (resid    4 and name CA   ) (resid    4 and name C    )    1.0  -97.0   36.0 2
+#assign (resid    4 and name N    ) (resid    4 and name CA   )
+#      (resid    4 and name C    ) (resid    5 and name N    )    1.0  129.0   64.0 2
+
+@_phi;
+@_psi;
+@_dphi;
+@_dpsi;
+print "Usage: $0 < xplor_dihed.tbl\r";
+
+while (<STDIN>) {
+	chomp;
+	next if (substr($_,0,1) eq '!' || $_ eq '');
+	@c = split(' ',uc(join(' ',split(/\(|\)/, $_))));
+
+	if ($c[5] eq 'C' && $c[10] eq 'N') {
+		$_ = <STDIN>;
+		chomp;
+		@c = split(' ',uc(join(' ',split(/\(|\)/, $_))));
+		if ($c[4] eq 'CA' && $c[9] eq 'C') {
+			$res = $c[1];
+			# PHI for $res
+			$_phi[$res] = $c[11];
+			$_dphi[$res] = $c[12];
+			#print "Res: $res\nPHI: $_phi[$res]\ndPHI: $_dphi[$res]\n"; exit;
+		}
+	} elsif ($c[5] eq 'N' && $c[10] eq 'CA') {
+		$_ = <STDIN>;
+		chomp;
+		@c = split(' ',uc(join(' ',split(/\(|\)/, $_))));
+		if ($c[4] eq 'C' && $c[9] eq 'N') {
+			$res = $c[1];
+			# PSI for $res
+			$_psi[$res] = $c[11];
+			$_dpsi[$res] = $c[12];
+		}
+	}
+}
+$d = sqrt($NUMBER_OF_PAIRS) / 2;
+print "Creating angle files from 1 to $#_phi, step: $d                                                 \n";
+for $q (1 .. $#_phi) {
+	`rm -f $q.angles`;
+
+	if (!$_phi[$q] && !$_psi[$q]) {
+		`cp $DEFAULT_FILE $q.angles`;
+		next;
+	} elsif (!$_phi[$q]) {
+		print "Special case: $q no phi angle\n";
+		`cat $DEFAULT_FILE | awk 'function d(q) {q = abs(q); return q<=180?q:d(360-q);} function abs(q){return q>=0?q:-q} {if (d(\$2 - $_psi[$q]) <= $_dpsi[$q]) print \$0}' > $q.angles`;
+		next;
+	} elsif (!$_psi[$q]) {
+		print "Special case: $q no psi angle\n";
+		#print "cat $DEFAULT_FILE | awk 'function d(q) {q = abs(q); return q<=180?q:d(360-q);} function abs(q){return q>=0?q:-q} {if (abs(\$1 - $_phi[$q]) <= $_dphi[$q]) print \$0}' > $q.angles\n";
+		`cat $DEFAULT_FILE | awk 'function d(q) {q = abs(q); return q<=180?q:d(360-q);} function abs(q){return q>=0?q:-q} {if (abs(\$1 - $_phi[$q]) <= $_dphi[$q]) print \$0}' > $q.angles`;
+		next;
+	}
+
+	if ($STRICT_FILTER == 1) {
+		`cat $DEFAULT_FILE | awk 'function d(q) {q = abs(q); return q<=180?q:d(360-q);} function abs(q){return q>=0?q:-q} {if ((d(\$1 - $_phi[$q]) <= $_dphi[$q]) && (d(\$2 - $_psi[$q]) <= $_dpsi[$q])) print \$0}' > $q.angles`;
+	} else {
+		for ($phi = $_phi[$q] - $_dphi[$q]; $phi < $_phi[$q] + $_dphi[$q]; $phi += $_dphi[$q]/$d) {
+			for ($psi = $_psi[$q] - $_dpsi[$q]; $psi < $_psi[$q] + $_dpsi[$q]; $psi += $_dpsi[$q]/$d) {
+				`echo "$phi $psi" >> $q.angles`;
+			}
+		}
+	}
+}

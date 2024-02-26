@@ -1,0 +1,47 @@
+#!/usr/bin/perl
+
+$argc = @ARGV;
+if ($argc < 2) {
+	print "Converts 7-row RDC input to a 9-column file.\nUsage: $0 <input> <output> [startresidue = 1]\n";
+	exit;
+}
+$SKIP999 = 1;
+
+open (IN, $ARGV[0]);
+open (OUT, '>'.$ARGV[1]);
+$resnum = 1;
+if ($ARGV[2]) { $resnum = $ARGV[2]; }
+
+@f = {'N', 'N', 'H', 'CA', 'H',  'H'};
+@t = {'C', 'H', 'C', 'HA', 'HA', 'HA'};
+@d = {-1,   0,  -1,   0,    0,   -1};
+
+
+while (<IN>) {
+	chomp;
+	@col = split(" ", $_);
+	$RES = $col[0];
+	$_ = <IN>; chomp; @col = split(" ", $_);
+	if ($col[0] != 999 || !$SKIP999) { print OUT "$resnum\t$RES\tN\t".($resnum-1)."\t$RES\tC\t$col[0]\t$col[1]\t1\t1\n"; }
+
+	$_ = <IN>; chomp; @col = split(" ", $_);
+	if ($col[0] != 999 || !$SKIP999) { print OUT "$resnum\t$RES\tN\t$resnum\t$RES\tH\t$col[0]\t$col[1]\t1\t1\n"; }
+
+	$_ = <IN>; chomp; @col = split(" ", $_);
+	if ($col[0] != 999 || !$SKIP999) { print OUT "$resnum\t$RES\tH\t".($resnum-1)."\t$RES\tC\t$col[0]\t$col[1]\t1\t1\n"; }
+
+	$_ = <IN>; chomp; @col = split(" ", $_);
+	if ($col[0] != 999 || !$SKIP999) { print OUT "$resnum\t$RES\tCA\t$resnum\t$RES\tHA\t$col[0]\t$col[1]\t1\t1\n"; }
+
+	$_ = <IN>; chomp; @col = split(" ", $_);
+	if ($col[0] != 999 || !$SKIP999) { print OUT "$resnum\t$RES\tH\t$resnum\t$RES\tHA\t$col[0]\t$col[1]\t1\t1\n"; }
+
+	$_ = <IN>; chomp; @col = split(" ", $_);
+	if ($col[0] != 999 || !$SKIP999) { print OUT "$resnum\t$RES\tH\t".($resnum-1)."\t$RES\tHA\t$col[0]\t$col[1]\t1\t1\n"; }
+
+	$resnum++;
+}
+
+#   59    SER      H     59    SER      N      2.230     1 1.00   1
+#   63    TYR      CA   63    TYR      HA    0.360     1 1.00   1
+

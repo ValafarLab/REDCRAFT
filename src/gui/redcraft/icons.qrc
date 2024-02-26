@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>rdc.svg</file>
+        <file>pdb.svg</file>
+        <file>out.svg</file>
+        <file>angles.svg</file>
+        <file>pdbmine.svg</file>
+    </qresource>
+</RCC>

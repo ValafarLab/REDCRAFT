@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+
+if ($#ARGV < 3) {
+	print "Usage: $0 <start> <stop> <depth> <prefix>\n";
+	exit;
+}
+$start = $ARGV[0];
+$stop = $ARGV[1];
+$depth = $ARGV[2];
+$prefix = $ARGV[3];
+
+for $current ($start .. $stop) {
+       print "$current\n";
+	open (OUT, "head -$depth $current.out |");
+	$loop = 0;
+	while (<OUT>) {
+		if ($current < 10) { $current = '0'.$current; }
+		print "$current : $loop\r";
+		if ($loop > 200) { last; }
+		$loop++;
+		chomp;
+		split;
+		$score = pop(@_);
+		$_ = join(' ', @_);
+		
+		$l = $loop;
+		if ($loop < 10) { $l = '0'.$l; }
+		if ($loop < 100) { $l = '0'.$l; }
+		if ($loop < 1000) { $l = '0'.$l; }
+		print `molan -g -f$prefix.$current.$l -p. -dwRDC "$_"`;
+	}
+	close(OUT);
+}
+
+open(MM, "| molmol -t $prefix.*.*.pdb 2>/dev/null");
+print MM "MoveInit\n";
+print MM "WritePdb $prefix.all.pdb\n";
+print MM "Quit no\n";
+close(MM);
+print "Created $prefix.all.pdb\n";
+`rm $prefix.*.*.pdb`;
